@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#0f0f1a">
+  <meta name="theme-color" content="#080c14">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>SleepLogs</title>
@@ -11,67 +11,319 @@
   <link rel="icon" href="/icons/icon-192.png">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <link rel="stylesheet" href="/css/style.css">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
-  <!-- Home View -->
-  <section id="view-home" class="view active">
-    <header class="app-header">
-      <h1>&#9790; SleepLogs</h1>
-    </header>
 
-    <div class="status-card" id="status-card">
-      <p class="status-text" id="status-text">Loading...</p>
-      <p class="status-timer" id="status-timer"></p>
+  <!-- ═══════════════════════════════════════════════════════════
+       LOGIN SCREEN
+  ═══════════════════════════════════════════════════════════ -->
+  <div id="view-login" class="fullscreen-view">
+    <div class="login-bg">
+      <div class="login-star s1"></div><div class="login-star s2"></div>
+      <div class="login-star s3"></div><div class="login-star s4"></div>
+      <div class="login-star s5"></div><div class="login-star s6"></div>
+      <div class="login-star s7"></div><div class="login-star s8"></div>
+    </div>
+    <div class="login-content">
+      <div class="login-logo">
+        <div class="login-icon-wrap">&#9790;</div>
+        <h1 class="login-title">SleepLogs</h1>
+        <p class="login-subtitle">Track sleep, study & workouts.<br>Build better habits.</p>
+      </div>
+      <div class="login-features">
+        <div class="login-feature"><span>&#128564;</span> Sleep tracking</div>
+        <div class="login-feature"><span>&#128218;</span> Study sessions</div>
+        <div class="login-feature"><span>&#127947;</span> Exercise logs</div>
+      </div>
+      <div class="login-btn-wrap">
+        <div id="google-btn-container"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       ONBOARDING
+  ═══════════════════════════════════════════════════════════ -->
+  <div id="view-onboarding" class="fullscreen-view">
+    <div class="ob-header">
+      <div class="ob-progress-bar">
+        <div class="ob-progress-fill" id="ob-progress-fill"></div>
+      </div>
+      <span class="ob-step-label" id="ob-step-label">Step 1 of 5</span>
     </div>
 
-    <div class="hero-btn-container">
-      <button id="sleep-btn" class="hero-btn state-awake" onclick="toggleSleep()">
-        <span class="hero-icon" id="hero-icon">&#9790;</span>
-        <span class="hero-label" id="hero-label">I'm going to sleep</span>
+    <!-- Step 1: Name -->
+    <div class="ob-step active" id="ob-step-1">
+      <div class="ob-icon">&#128075;</div>
+      <h2>What should we call you?</h2>
+      <p class="ob-hint">This is how we'll greet you each day</p>
+      <input type="text" id="ob-name" class="ob-input" placeholder="Your name" autocomplete="off" maxlength="30">
+    </div>
+
+    <!-- Step 2: Age & Gender -->
+    <div class="ob-step" id="ob-step-2">
+      <div class="ob-icon">&#128100;</div>
+      <h2>Tell us about yourself</h2>
+      <p class="ob-hint">Helps us personalize your insights</p>
+      <input type="number" id="ob-age" class="ob-input" placeholder="Your age" min="10" max="100">
+      <div class="ob-options-label">Gender</div>
+      <div class="ob-options-grid">
+        <button class="ob-option" data-field="gender" data-value="male">&#9794; Male</button>
+        <button class="ob-option" data-field="gender" data-value="female">&#9792; Female</button>
+        <button class="ob-option" data-field="gender" data-value="non-binary">&#9898; Non-binary</button>
+        <button class="ob-option" data-field="gender" data-value="prefer-not">&#128683; Prefer not</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Sleep Goal -->
+    <div class="ob-step" id="ob-step-3">
+      <div class="ob-icon">&#127769;</div>
+      <h2>Set your sleep goal</h2>
+      <p class="ob-hint">How many hours do you aim to sleep?</p>
+      <div class="sleep-goal-display" id="ob-sleep-goal-display">8 hours</div>
+      <input type="range" id="ob-sleep-goal" class="ob-slider" min="4" max="12" step="0.5" value="8">
+      <div class="slider-labels"><span>4h</span><span>8h</span><span>12h</span></div>
+      <div class="sleep-goal-tip" id="sleep-goal-tip">The recommended amount for adults is 7–9 hours.</div>
+    </div>
+
+    <!-- Step 4: Occupation & Work Schedule -->
+    <div class="ob-step" id="ob-step-4">
+      <div class="ob-icon">&#128188;</div>
+      <h2>Your lifestyle</h2>
+      <p class="ob-hint">So we understand your routine</p>
+      <input type="text" id="ob-occupation" class="ob-input" placeholder="Occupation (e.g. Student, Engineer)" maxlength="50">
+      <div class="ob-options-label">Work / Study Schedule</div>
+      <div class="ob-options-grid">
+        <button class="ob-option" data-field="schedule" data-value="regular">&#128336; Regular 9–5</button>
+        <button class="ob-option" data-field="schedule" data-value="shift">&#127761; Shift Work</button>
+        <button class="ob-option" data-field="schedule" data-value="flexible">&#128257; Flexible</button>
+        <button class="ob-option" data-field="schedule" data-value="student">&#127979; Student</button>
+      </div>
+    </div>
+
+    <!-- Step 5: Exercise -->
+    <div class="ob-step" id="ob-step-5">
+      <div class="ob-icon">&#127947;</div>
+      <h2>How often do you exercise?</h2>
+      <p class="ob-hint">We'll track how it affects your sleep</p>
+      <div class="ob-options-list">
+        <button class="ob-option wide" data-field="exercise" data-value="daily">&#128293; Every day</button>
+        <button class="ob-option wide" data-field="exercise" data-value="few_times_week">&#128170; 4–5 times a week</button>
+        <button class="ob-option wide" data-field="exercise" data-value="weekly">&#128308; 2–3 times a week</button>
+        <button class="ob-option wide" data-field="exercise" data-value="rarely">&#128374; Once a week or less</button>
+        <button class="ob-option wide" data-field="exercise" data-value="never">&#128564; Rarely / Never</button>
+      </div>
+    </div>
+
+    <div class="ob-footer">
+      <button class="ob-back-btn" id="ob-back-btn" onclick="obBack()">&#8592; Back</button>
+      <button class="ob-next-btn" onclick="obNext()">
+        <span id="ob-next-label">Continue</span> &#8594;
       </button>
     </div>
+  </div>
 
-    <div class="today-card" id="today-card" style="display:none;">
-      <p class="today-title">Last sleep</p>
-      <p class="today-duration" id="today-duration"></p>
-      <div class="today-quality" id="today-quality"></div>
-    </div>
-  </section>
+  <!-- ═══════════════════════════════════════════════════════════
+       MAIN APP
+  ═══════════════════════════════════════════════════════════ -->
+  <div id="app-container" style="display:none">
 
-  <!-- History View -->
-  <section id="view-history" class="view">
-    <header class="app-header">
-      <h1>&#128203; History</h1>
-    </header>
-    <div class="history-list" id="history-list">
-      <p class="empty-msg">Loading...</p>
-    </div>
-  </section>
+    <!-- ─── HOME (Dashboard) ─── -->
+    <section id="view-home" class="view active">
+      <header class="app-header">
+        <div class="header-greeting">
+          <p class="greeting-sub" id="greeting-time">Good evening</p>
+          <h2 class="greeting-name" id="greeting-name">Loading...</h2>
+        </div>
+        <button class="avatar-btn" onclick="switchView('profile')">
+          <img id="user-avatar" class="user-avatar" src="" alt="" style="display:none">
+          <span id="avatar-fallback" class="avatar-fallback">?</span>
+        </button>
+      </header>
 
-  <!-- Charts View -->
-  <section id="view-charts" class="view">
-    <header class="app-header">
-      <h1>&#128200; Charts</h1>
-    </header>
-    <div class="chart-tabs">
-      <button class="chart-tab active" onclick="loadCharts(7)">7 Days</button>
-      <button class="chart-tab" onclick="loadCharts(30)">30 Days</button>
-    </div>
-    <div class="stats-summary" id="stats-summary"></div>
-    <div class="chart-container">
-      <h3>Sleep Duration</h3>
-      <canvas id="duration-chart"></canvas>
-    </div>
-    <div class="chart-container">
-      <h3>Sleep Quality</h3>
-      <canvas id="quality-chart"></canvas>
-    </div>
-  </section>
+      <!-- Today summary strip -->
+      <div class="today-strip" id="today-strip">
+        <div class="today-chip sleep-chip" id="strip-sleep" onclick="switchView('history')">
+          <span class="chip-icon">&#9790;</span>
+          <span class="chip-val" id="strip-sleep-val">—</span>
+          <span class="chip-label">Sleep</span>
+        </div>
+        <div class="today-chip study-chip" id="strip-study" onclick="switchView('log'); switchLog('study')">
+          <span class="chip-icon">&#128218;</span>
+          <span class="chip-val" id="strip-study-val">—</span>
+          <span class="chip-label">Study</span>
+        </div>
+        <div class="today-chip exercise-chip" id="strip-exercise" onclick="switchView('log'); switchLog('exercise')">
+          <span class="chip-icon">&#127947;</span>
+          <span class="chip-val" id="strip-exercise-val">—</span>
+          <span class="chip-label">Exercise</span>
+        </div>
+      </div>
+
+      <!-- Sleep card -->
+      <div class="home-card sleep-card">
+        <div class="card-status">
+          <span class="card-status-dot" id="sleep-dot"></span>
+          <span id="status-text">Loading...</span>
+        </div>
+        <p class="card-timer" id="status-timer"></p>
+        <div class="hero-btn-wrap">
+          <button id="sleep-btn" class="hero-btn state-awake" onclick="toggleSleep()">
+            <span class="hero-icon" id="hero-icon">&#9790;</span>
+            <span class="hero-label" id="hero-label">I'm going to sleep</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick-log row -->
+      <div class="quick-row">
+        <button class="quick-btn study-btn" id="study-quick-btn" onclick="handleStudyQuick()">
+          <span class="qb-icon">&#128218;</span>
+          <span class="qb-text" id="study-quick-label">Start Study</span>
+        </button>
+        <button class="quick-btn exercise-btn" onclick="openExerciseModal()">
+          <span class="qb-icon">&#127947;</span>
+          <span class="qb-text">Log Workout</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ─── SLEEP HISTORY ─── -->
+    <section id="view-history" class="view">
+      <header class="app-header flat">
+        <h1>&#9790; Sleep History</h1>
+      </header>
+      <div class="history-list" id="history-list">
+        <p class="empty-msg">Loading...</p>
+      </div>
+    </section>
+
+    <!-- ─── LOG (Study + Exercise) ─── -->
+    <section id="view-log" class="view">
+      <header class="app-header flat">
+        <h1>&#128203; Activity Log</h1>
+      </header>
+      <div class="log-tabs">
+        <button class="log-tab active" id="log-tab-study" onclick="switchLog('study')">&#128218; Study</button>
+        <button class="log-tab" id="log-tab-exercise" onclick="switchLog('exercise')">&#127947; Exercise</button>
+      </div>
+
+      <!-- Study Panel -->
+      <div id="log-study-panel" class="log-panel">
+        <div class="study-status-card" id="study-status-card">
+          <div class="card-status">
+            <span class="card-status-dot study-dot" id="study-dot"></span>
+            <span id="study-status-text">Not studying</span>
+          </div>
+          <p class="card-timer" id="study-timer"></p>
+        </div>
+        <div class="study-controls">
+          <select id="study-subject" class="subject-select">
+            <option value="General">General</option>
+            <option value="Math">Math</option>
+            <option value="Science">Science</option>
+            <option value="Programming">Programming</option>
+            <option value="Language">Language</option>
+            <option value="History">History</option>
+            <option value="Reading">Reading</option>
+            <option value="Work">Work</option>
+            <option value="Other">Other</option>
+          </select>
+          <button class="action-btn study-action-btn" id="study-action-btn" onclick="toggleStudy()">
+            Start Session
+          </button>
+        </div>
+        <div class="list-header">Recent Sessions</div>
+        <div id="study-list" class="activity-list"><p class="empty-msg">Loading...</p></div>
+      </div>
+
+      <!-- Exercise Panel -->
+      <div id="log-exercise-panel" class="log-panel" style="display:none">
+        <button class="add-fab" onclick="openExerciseModal()">+ Log Workout</button>
+        <div class="list-header">Recent Workouts</div>
+        <div id="exercise-list" class="activity-list"><p class="empty-msg">Loading...</p></div>
+      </div>
+    </section>
+
+    <!-- ─── CHARTS ─── -->
+    <section id="view-charts" class="view">
+      <header class="app-header flat">
+        <h1>&#128200; Charts</h1>
+      </header>
+      <div class="chart-type-tabs">
+        <button class="ctype-tab active" onclick="setChartType('sleep')">&#9790; Sleep</button>
+        <button class="ctype-tab" onclick="setChartType('study')">&#128218; Study</button>
+        <button class="ctype-tab" onclick="setChartType('exercise')">&#127947; Exercise</button>
+      </div>
+      <div class="chart-period-tabs">
+        <button class="period-tab active" onclick="setChartPeriod(7)">7 Days</button>
+        <button class="period-tab" onclick="setChartPeriod(30)">30 Days</button>
+      </div>
+      <div class="stats-grid" id="stats-grid"></div>
+      <div class="chart-card">
+        <h3 id="chart-main-title">Daily Duration</h3>
+        <canvas id="main-chart"></canvas>
+      </div>
+      <div class="chart-card" id="chart-secondary-wrap">
+        <h3 id="chart-secondary-title">Trend</h3>
+        <canvas id="secondary-chart"></canvas>
+      </div>
+    </section>
+
+    <!-- ─── PROFILE ─── -->
+    <section id="view-profile" class="view">
+      <header class="app-header flat">
+        <h1>&#128100; Profile</h1>
+      </header>
+      <div class="profile-hero">
+        <img id="profile-avatar" class="profile-avatar" src="" alt="">
+        <h2 id="profile-name"></h2>
+        <p id="profile-email" class="profile-email"></p>
+      </div>
+      <div class="profile-stats-grid" id="profile-stats"></div>
+      <div class="profile-info-card" id="profile-info"></div>
+      <div class="profile-actions">
+        <button class="profile-action-btn logout-btn" onclick="logout()">&#9760; Sign out</button>
+      </div>
+    </section>
+
+  </div><!-- /app-container -->
+
+  <!-- ─── BOTTOM NAV ─── -->
+  <nav class="bottom-nav" style="display:none">
+    <button class="nav-btn active" data-view="home" onclick="switchView('home')">
+      <span class="nav-icon">&#127968;</span>
+      <span class="nav-label">Home</span>
+    </button>
+    <button class="nav-btn" data-view="history" onclick="switchView('history')">
+      <span class="nav-icon">&#9790;</span>
+      <span class="nav-label">Sleep</span>
+    </button>
+    <button class="nav-btn" data-view="log" onclick="switchView('log')">
+      <span class="nav-icon">&#128203;</span>
+      <span class="nav-label">Log</span>
+    </button>
+    <button class="nav-btn" data-view="charts" onclick="switchView('charts')">
+      <span class="nav-icon">&#128200;</span>
+      <span class="nav-label">Charts</span>
+    </button>
+    <button class="nav-btn" data-view="profile" onclick="switchView('profile')">
+      <span class="nav-icon">&#128100;</span>
+      <span class="nav-label">Profile</span>
+    </button>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       MODALS
+  ═══════════════════════════════════════════════════════════ -->
 
   <!-- Quality Rating Modal -->
-  <div class="modal-overlay" id="quality-modal" style="display:none;">
+  <div class="modal-overlay" id="quality-modal" style="display:none">
     <div class="modal">
+      <div class="modal-icon">&#127769;</div>
       <h2>How was your sleep?</h2>
+      <p class="modal-sub">Rate the quality of this session</p>
       <div class="star-rating" id="star-rating">
         <button class="star" data-val="1">&#9733;</button>
         <button class="star" data-val="2">&#9733;</button>
@@ -79,34 +331,59 @@
         <button class="star" data-val="4">&#9733;</button>
         <button class="star" data-val="5">&#9733;</button>
       </div>
-      <button class="modal-btn" id="modal-submit" onclick="submitWake()">Save</button>
-      <button class="modal-btn modal-skip" onclick="submitWake(true)">Skip</button>
+      <div class="star-labels">
+        <span>Terrible</span><span></span><span>Okay</span><span></span><span>Amazing</span>
+      </div>
+      <button class="modal-btn primary-btn" id="modal-submit" onclick="submitWake()">Save &amp; Close</button>
+      <button class="modal-btn ghost-btn" onclick="submitWake(true)">Skip</button>
     </div>
   </div>
 
-  <!-- Bottom Navigation -->
-  <nav class="bottom-nav">
-    <button class="nav-btn active" data-view="home" onclick="switchView('home')">
-      <span class="nav-icon">&#127969;</span>
-      <span class="nav-label">Home</span>
-    </button>
-    <button class="nav-btn" data-view="history" onclick="switchView('history')">
-      <span class="nav-icon">&#128203;</span>
-      <span class="nav-label">History</span>
-    </button>
-    <button class="nav-btn" data-view="charts" onclick="switchView('charts')">
-      <span class="nav-icon">&#128200;</span>
-      <span class="nav-label">Charts</span>
-    </button>
-  </nav>
+  <!-- Exercise Log Modal -->
+  <div class="modal-overlay" id="exercise-modal" style="display:none">
+    <div class="modal">
+      <div class="modal-icon">&#127947;</div>
+      <h2>Log a Workout</h2>
+      <div class="exercise-type-grid" id="exercise-type-grid">
+        <button class="ex-type-btn" data-type="Running">&#127939; Running</button>
+        <button class="ex-type-btn" data-type="Walking">&#128694; Walking</button>
+        <button class="ex-type-btn" data-type="Cycling">&#128690; Cycling</button>
+        <button class="ex-type-btn" data-type="Swimming">&#127946; Swimming</button>
+        <button class="ex-type-btn" data-type="Gym">&#127947; Gym</button>
+        <button class="ex-type-btn" data-type="Yoga">&#129340; Yoga</button>
+        <button class="ex-type-btn" data-type="Sports">&#9917; Sports</button>
+        <button class="ex-type-btn" data-type="Other">&#128310; Other</button>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Duration (min)</label>
+          <input type="number" id="ex-duration" class="ob-input small" placeholder="30" min="1" max="600">
+        </div>
+        <div class="form-group">
+          <label>Calories (optional)</label>
+          <input type="number" id="ex-calories" class="ob-input small" placeholder="—" min="0">
+        </div>
+      </div>
+      <div class="ob-options-label">Intensity</div>
+      <div class="ob-options-grid compact">
+        <button class="ob-option" data-field="intensity" data-value="low">&#129496; Easy</button>
+        <button class="ob-option selected" data-field="intensity" data-value="moderate">&#128170; Moderate</button>
+        <button class="ob-option" data-field="intensity" data-value="high">&#128293; Hard</button>
+      </div>
+      <input type="text" id="ex-notes" class="ob-input" placeholder="Notes (optional)" maxlength="100" style="margin-top:12px">
+      <button class="modal-btn primary-btn" onclick="submitExercise()">Save Workout</button>
+      <button class="modal-btn ghost-btn" onclick="closeExerciseModal()">Cancel</button>
+    </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
   <script src="/js/charts.js"></script>
+  <script src="/js/study.js"></script>
+  <script src="/js/exercise.js"></script>
   <script src="/js/app.js"></script>
+  <script src="/js/auth.js"></script>
   <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js');
-    }
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
   </script>
 </body>
 </html>

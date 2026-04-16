@@ -9,7 +9,10 @@ router.get('/health', (req, res) => {
 
 // GET /api/status - current sleep/awake state
 router.get('/status', (req, res) => {
-  const active = db.prepare('SELECT * FROM sleep_records WHERE sleep_end IS NULL').get();
+  const active = db.prepare(
+    'SELECT * FROM sleep_records WHERE user_id = ? AND sleep_end IS NULL'
+  ).get(req.userId);
+
   if (active) {
     const elapsed = (Date.now() - new Date(active.sleep_start + 'Z').getTime()) / 60000;
     res.json({
@@ -27,13 +30,18 @@ router.get('/status', (req, res) => {
 
 // POST /api/sleep - start a sleep session
 router.post('/sleep', (req, res) => {
-  const active = db.prepare('SELECT id FROM sleep_records WHERE sleep_end IS NULL').get();
+  const active = db.prepare(
+    'SELECT id FROM sleep_records WHERE user_id = ? AND sleep_end IS NULL'
+  ).get(req.userId);
+
   if (active) {
     return res.status(409).json({ error: 'Already in a sleep session' });
   }
 
   const now = new Date().toISOString().replace('Z', '').replace('T', ' ').slice(0, 19);
-  const result = db.prepare('INSERT INTO sleep_records (sleep_start) VALUES (?)').run(now);
+  const result = db.prepare(
+    'INSERT INTO sleep_records (user_id, sleep_start) VALUES (?, ?)'
+  ).run(req.userId, now);
 
   res.status(201).json({
     id: result.lastInsertRowid,
@@ -46,7 +54,10 @@ router.post('/sleep', (req, res) => {
 
 // POST /api/wake - end a sleep session
 router.post('/wake', (req, res) => {
-  const active = db.prepare('SELECT * FROM sleep_records WHERE sleep_end IS NULL').get();
+  const active = db.prepare(
+    'SELECT * FROM sleep_records WHERE user_id = ? AND sleep_end IS NULL'
+  ).get(req.userId);
+
   if (!active) {
     return res.status(409).json({ error: 'No active sleep session' });
   }
@@ -62,8 +73,8 @@ router.post('/wake', (req, res) => {
   db.prepare(`
     UPDATE sleep_records
     SET sleep_end = ?, duration_minutes = ?, quality = ?, notes = ?
-    WHERE id = ?
-  `).run(now, duration, quality, notes, active.id);
+    WHERE id = ? AND user_id = ?
+  `).run(now, duration, quality, notes, active.id, req.userId);
 
   res.json({
     id: active.id,
@@ -85,15 +96,15 @@ router.get('/records', (req, res) => {
 
   const records = db.prepare(`
     SELECT * FROM sleep_records
-    WHERE sleep_end IS NOT NULL AND sleep_start >= ?
+    WHERE user_id = ? AND sleep_end IS NOT NULL AND sleep_start >= ?
     ORDER BY sleep_start DESC
     LIMIT ? OFFSET ?
-  `).all(cutoff, limit, offset);
+  `).all(req.userId, cutoff, limit, offset);
 
   const total = db.prepare(`
     SELECT COUNT(*) as count FROM sleep_records
-    WHERE sleep_end IS NOT NULL AND sleep_start >= ?
-  `).get(cutoff);
+    WHERE user_id = ? AND sleep_end IS NOT NULL AND sleep_start >= ?
+  `).get(req.userId, cutoff);
 
   res.json({ records, total: total.count });
 });
@@ -111,8 +122,8 @@ router.get('/stats', (req, res) => {
       COUNT(*) as total_records,
       AVG(quality) as avg_quality
     FROM sleep_records
-    WHERE sleep_end IS NOT NULL AND sleep_start >= ?
-  `).get(cutoff);
+    WHERE user_id = ? AND sleep_end IS NOT NULL AND sleep_start >= ?
+  `).get(req.userId, cutoff);
 
   const daily = db.prepare(`
     SELECT
@@ -120,18 +131,18 @@ router.get('/stats', (req, res) => {
       SUM(duration_minutes) as duration_minutes,
       AVG(quality) as quality
     FROM sleep_records
-    WHERE sleep_end IS NOT NULL AND sleep_start >= ?
+    WHERE user_id = ? AND sleep_end IS NOT NULL AND sleep_start >= ?
     GROUP BY DATE(sleep_start)
     ORDER BY date ASC
-  `).all(cutoff);
+  `).all(req.userId, cutoff);
 
   // Calculate streak
   const allDays = db.prepare(`
     SELECT DISTINCT DATE(sleep_start) as date
     FROM sleep_records
-    WHERE sleep_end IS NOT NULL
+    WHERE user_id = ? AND sleep_end IS NOT NULL
     ORDER BY date DESC
-  `).all();
+  `).all(req.userId);
 
   let streak = 0;
   const today = new Date().toISOString().slice(0, 10);
@@ -143,7 +154,6 @@ router.get('/stats', (req, res) => {
       streak++;
       checkDate.setDate(checkDate.getDate() - 1);
     } else if (streak === 0 && row.date === new Date(checkDate.getTime() - 86400000).toISOString().slice(0, 10)) {
-      // Allow streak to start from yesterday if no entry today yet
       checkDate.setDate(checkDate.getDate() - 1);
       streak++;
       checkDate.setDate(checkDate.getDate() - 1);
@@ -166,7 +176,10 @@ router.get('/stats', (req, res) => {
 
 // DELETE /api/records/:id
 router.delete('/records/:id', (req, res) => {
-  const result = db.prepare('DELETE FROM sleep_records WHERE id = ?').run(req.params.id);
+  const result = db.prepare(
+    'DELETE FROM sleep_records WHERE id = ? AND user_id = ?'
+  ).run(req.params.id, req.userId);
+
   if (result.changes === 0) {
     return res.status(404).json({ error: 'Record not found' });
   }

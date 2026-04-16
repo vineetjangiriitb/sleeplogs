@@ -10,21 +10,73 @@ fs.mkdirSync(dbDir, { recursive: true });
 const db = new Database(dbPath);
 
 db.pragma('journal_mode = WAL');
+db.pragma('foreign_keys = ON');
 
 db.exec(`
-  CREATE TABLE IF NOT EXISTS sleep_records (
+  CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    sleep_start TEXT NOT NULL,
-    sleep_end TEXT,
-    duration_minutes REAL,
-    quality INTEGER,
-    notes TEXT,
+    google_id TEXT UNIQUE NOT NULL,
+    email TEXT NOT NULL,
+    name TEXT,
+    picture TEXT,
+    display_name TEXT,
+    age INTEGER,
+    gender TEXT,
+    sleep_goal_hours REAL DEFAULT 8,
+    occupation TEXT,
+    work_schedule TEXT,
+    exercise_frequency TEXT,
+    onboarding_complete INTEGER DEFAULT 0,
     created_at TEXT DEFAULT (datetime('now'))
   )
 `);
 
 db.exec(`
-  CREATE INDEX IF NOT EXISTS idx_sleep_start ON sleep_records(sleep_start)
+  CREATE TABLE IF NOT EXISTS sleep_records (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    sleep_start TEXT NOT NULL,
+    sleep_end TEXT,
+    duration_minutes REAL,
+    quality INTEGER,
+    notes TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  )
 `);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS study_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    subject TEXT DEFAULT 'General',
+    session_start TEXT NOT NULL,
+    session_end TEXT,
+    duration_minutes REAL,
+    notes TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  )
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS exercise_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    exercise_type TEXT NOT NULL,
+    logged_at TEXT NOT NULL,
+    duration_minutes REAL NOT NULL,
+    intensity TEXT DEFAULT 'moderate',
+    calories INTEGER,
+    notes TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  )
+`);
+
+db.exec(`CREATE INDEX IF NOT EXISTS idx_sleep_start   ON sleep_records(sleep_start)`);
+db.exec(`CREATE INDEX IF NOT EXISTS idx_sleep_user    ON sleep_records(user_id)`);
+db.exec(`CREATE INDEX IF NOT EXISTS idx_study_user    ON study_sessions(user_id)`);
+db.exec(`CREATE INDEX IF NOT EXISTS idx_exercise_user ON exercise_logs(user_id)`);
 
 module.exports = db;

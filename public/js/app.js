@@ -168,51 +168,123 @@ async function updateTodayStrip() {
   });
 }
 
-// ── Sleep History ──
-async function loadHistory() {
-  const data = await api('/records?days=90&limit=100');
-  if (!data) return;
-  const list = document.getElementById('history-list');
+// ── Unified Activity Log (sleep + study + exercise) ──
+async function loadUnifiedLog() {
+  const list = document.getElementById('unified-log');
+  if (!list) return;
 
-  if (data.records.length === 0) {
-    list.innerHTML = '<p class="empty-msg">No sleep records yet.<br>Tap the moon to start tracking!</p>';
+  const [sleepR, studyR, exerR] = await Promise.all([
+    api('/records?days=90&limit=200'),
+    api('/study/records?days=90'),
+    api('/exercise/records?days=90')
+  ]);
+
+  const items = [];
+
+  (sleepR?.records || []).forEach(r => {
+    items.push({
+      kind: 'sleep',
+      time: r.sleep_start,
+      dateKey: r.sleep_start.split(' ')[0],
+      html: renderSleepItem(r)
+    });
+  });
+  (studyR?.records || []).forEach(r => {
+    items.push({
+      kind: 'study',
+      time: r.session_start,
+      dateKey: r.session_start.split(' ')[0],
+      html: renderStudyItem(r)
+    });
+  });
+  (exerR?.records || []).forEach(r => {
+    items.push({
+      kind: 'exercise',
+      time: r.logged_at,
+      dateKey: r.logged_at.split(' ')[0],
+      html: renderExerciseItem(r)
+    });
+  });
+
+  if (items.length === 0) {
+    list.innerHTML = '<p class="empty-msg">No activity yet.<br>Start tracking sleep, study, or workouts!</p>';
     return;
   }
 
+  // Sort descending by time
+  items.sort((a, b) => b.time.localeCompare(a.time));
+
+  // Group by date
   const groups = {};
-  data.records.forEach(r => {
-    const date = r.sleep_start.split(' ')[0];
-    if (!groups[date]) groups[date] = [];
-    groups[date].push(r);
+  items.forEach(it => {
+    (groups[it.dateKey] = groups[it.dateKey] || []).push(it);
   });
 
   let html = '';
-  for (const [date, records] of Object.entries(groups)) {
+  for (const [date, dayItems] of Object.entries(groups)) {
     html += `<div class="history-date-group">
-      <div class="history-date">${formatDate(date)}</div>`;
-    records.forEach(r => {
-      const dur = formatDuration(r.duration_minutes);
-      const cls = durationClass(r.duration_minutes);
-      const stars = r.quality ? `<div class="history-stars">${'\u2605'.repeat(r.quality)}${'\u2606'.repeat(5 - r.quality)}</div>` : '';
-      html += `<div class="history-item">
-        <span class="history-item-icon">&#9790;</span>
-        <div class="history-item-info">
-          <div class="history-time">${formatTime(r.sleep_start)} – ${r.sleep_end ? formatTime(r.sleep_end) : 'ongoing'}</div>
-          <div class="history-duration ${cls}">${dur}</div>
-          ${stars}
-        </div>
-        <button class="history-delete" onclick="deleteRecord(${r.id})">&times;</button>
-      </div>`;
-    });
-    html += '</div>';
+      <div class="history-date">${formatDate(date)}</div>
+      ${dayItems.map(i => i.html).join('')}
+    </div>`;
   }
   list.innerHTML = html;
+}
+
+function renderSleepItem(r) {
+  const dur = formatDuration(r.duration_minutes);
+  const cls = durationClass(r.duration_minutes);
+  const stars = r.quality ? `<div class="history-stars">${'\u2605'.repeat(r.quality)}${'\u2606'.repeat(5 - r.quality)}</div>` : '';
+  const endTime = r.sleep_end ? formatTime(r.sleep_end) : 'ongoing';
+  return `<div class="activity-item kind-sleep">
+    <span class="ai-icon">&#9790;</span>
+    <div class="ai-info">
+      <div class="ai-title">Sleep</div>
+      <div class="ai-sub">${formatTime(r.sleep_start)} – ${endTime}</div>
+      ${stars}
+    </div>
+    <div>
+      <div class="ai-dur ${cls}">${dur}</div>
+      <button class="history-delete" onclick="deleteRecord(${r.id})" style="display:block;margin-top:4px">&times;</button>
+    </div>
+  </div>`;
+}
+
+function renderStudyItem(r) {
+  const dur = formatDuration(r.duration_minutes);
+  const icon = subjectIcon(r.subject);
+  return `<div class="activity-item kind-study">
+    <span class="ai-icon">${icon}</span>
+    <div class="ai-info">
+      <div class="ai-title">${r.subject}</div>
+      <div class="ai-sub">Study &bull; ${formatTime(r.session_start)}</div>
+    </div>
+    <div>
+      <div class="ai-dur study-color">${dur}</div>
+      <button class="history-delete" onclick="deleteStudyRecord(${r.id})" style="display:block;margin-top:4px">&times;</button>
+    </div>
+  </div>`;
+}
+
+function renderExerciseItem(r) {
+  const dur = formatDuration(r.duration_minutes);
+  const icon = exerciseIcon(r.exercise_type);
+  return `<div class="activity-item kind-exercise">
+    <span class="ai-icon">${icon}</span>
+    <div class="ai-info">
+      <div class="ai-title">${r.exercise_type}</div>
+      <div class="ai-sub">Workout</div>
+    </div>
+    <div>
+      <div class="ai-dur exer-color">${dur}</div>
+      <button class="history-delete" onclick="deleteExerciseRecord(${r.id})" style="display:block;margin-top:4px">&times;</button>
+    </div>
+  </div>`;
 }
 
 async function deleteRecord(id) {
   if (!confirm('Delete this sleep record?')) return;
   await api('/records/' + id, { method: 'DELETE' });
-  loadHistory();
+  loadUnifiedLog();
   updateTodayStrip();
 }
 
@@ -259,9 +331,8 @@ function switchView(name) {
   document.getElementById('view-' + name)?.classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
 
-  if (name === 'history') loadHistory();
-  if (name === 'log') { switchLog('study'); }
-  if (name === 'charts') loadCharts(chartType, chartPeriod);
+  if (name === 'log') loadUnifiedLog();
+  if (name === 'charts') loadCharts(chartPeriod);
   if (name === 'profile') loadProfile();
 }
 

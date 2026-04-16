@@ -19,21 +19,25 @@ function updateStudyUI() {
   const btn = document.getElementById('study-action-btn');
   const quickBtn = document.getElementById('study-quick-btn');
   const quickLabel = document.getElementById('study-quick-label');
+  const statusCard = document.getElementById('study-status-card');
 
   if (studyState.isStudying) {
     const subj = studyState.currentSession?.subject || 'Study';
     dot?.classList.add('active-study');
     if (statusText) statusText.textContent = `Studying: ${subj}`;
-    if (btn) { btn.textContent = 'Stop Session'; btn.classList.add('active-btn'); }
+    if (btn) { btn.textContent = 'Stop Study'; btn.classList.add('active-btn'); }
     if (quickBtn) quickBtn.classList.add('active-study');
     if (quickLabel) quickLabel.textContent = `Stop Study`;
+    if (statusCard) statusCard.style.display = 'block';
   } else {
     dot?.classList.remove('active-study');
     if (statusText) statusText.textContent = 'Not studying';
-    if (btn) { btn.textContent = 'Start Session'; btn.classList.remove('active-btn'); }
+    if (btn) { btn.textContent = 'Start Study'; btn.classList.remove('active-btn'); }
     if (quickBtn) quickBtn.classList.remove('active-study');
     if (quickLabel) quickLabel.textContent = 'Start Study';
-    document.getElementById('study-timer').textContent = '';
+    const tEl = document.getElementById('study-timer');
+    if (tEl) tEl.textContent = '';
+    if (statusCard) statusCard.style.display = 'none';
     clearInterval(studyState.timerInterval);
   }
 }
@@ -65,7 +69,7 @@ async function toggleStudy() {
     studyState.currentSession = null;
     clearInterval(studyState.timerInterval);
     updateStudyUI();
-    loadStudyList();
+    loadUnifiedLog();
     updateTodayStrip();
   } else {
     const subject = document.getElementById('study-subject')?.value || 'General';
@@ -83,50 +87,11 @@ async function handleStudyQuick() {
   await toggleStudy();
 }
 
-async function loadStudyList() {
-  const data = await api('/study/records?days=30');
-  if (!data) return;
-  const list = document.getElementById('study-list');
-  if (!list) return;
-
-  if (data.records.length === 0) {
-    list.innerHTML = '<p class="empty-msg">No study sessions yet.<br>Hit Start Session to begin!</p>';
-    return;
-  }
-
-  list.innerHTML = data.records.map(r => {
-    const dur = formatDuration(r.duration_minutes);
-    const time = formatTime(r.session_start);
-    const icon = subjectIcon(r.subject);
-    return `<div class="activity-item">
-      <span class="ai-icon">${icon}</span>
-      <div class="ai-info">
-        <div class="ai-title">${r.subject}</div>
-        <div class="ai-sub">${formatDate(r.session_start.split(' ')[0])} &bull; ${time}</div>
-      </div>
-      <div>
-        <div class="ai-dur">${dur}</div>
-        <button class="history-delete" onclick="deleteStudyRecord(${r.id})" style="display:block;margin-top:4px">&times;</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
 async function deleteStudyRecord(id) {
   if (!confirm('Delete this study session?')) return;
   await api('/study/' + id, { method: 'DELETE' });
-  loadStudyList();
+  loadUnifiedLog();
   updateTodayStrip();
-}
-
-function switchLog(tab) {
-  document.getElementById('log-study-panel').style.display = tab === 'study' ? 'block' : 'none';
-  document.getElementById('log-exercise-panel').style.display = tab === 'exercise' ? 'block' : 'none';
-  document.getElementById('log-tab-study').classList.toggle('active', tab === 'study');
-  document.getElementById('log-tab-exercise').classList.toggle('active', tab === 'exercise');
-
-  if (tab === 'study') loadStudyList();
-  if (tab === 'exercise') loadExerciseList();
 }
 
 function subjectIcon(subject) {

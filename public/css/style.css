@@ -592,32 +592,30 @@ input, select { font-family: inherit; }
 }
 .history-delete:hover, .history-delete:active { color: var(--poor); }
 
-/* ══════════════ LOG (Study + Exercise) ══════════════ */
-.log-tabs {
+/* ══════════════ UNIFIED LOG ══════════════ */
+#view-log { padding: 0 16px 20px; }
+.log-actions {
   display: flex;
-  margin: 4px 16px 12px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 4px;
-  gap: 4px;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
 }
-.log-tab {
-  flex: 1;
-  background: transparent;
-  color: var(--text-2);
-  border-radius: 10px;
-  padding: 10px;
-  font-size: .88rem;
-  font-weight: 600;
-  transition: all .2s;
+.log-action-row {
+  display: flex;
+  gap: 10px;
 }
-.log-tab.active {
-  background: var(--bg-card2);
-  color: var(--text);
-}
+.log-action-row .subject-select { flex: 1; }
+.log-action-row .action-btn { flex-shrink: 0; }
+.add-fab { margin-bottom: 0 !important; }
 
-.log-panel { padding: 0 16px; flex: 1; overflow-y: auto; }
+.activity-item.kind-sleep { border-left: 3px solid var(--sleep); }
+.activity-item.kind-study { border-left: 3px solid var(--study); }
+.activity-item.kind-exercise { border-left: 3px solid var(--exer); }
+.ai-dur.study-color { color: var(--study-hi); }
+.ai-dur.good { color: var(--good); }
+.ai-dur.okay { color: #f59e0b; }
+.ai-dur.poor { color: var(--poor); }
+
 .study-status-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -731,29 +729,29 @@ input, select { font-family: inherit; }
 .intensity-high { background: rgba(239,68,68,.15); color: #f87171; }
 
 /* ══════════════ CHARTS ══════════════ */
-.chart-type-tabs {
+.chart-section {
+  margin-bottom: 28px;
+  padding: 0 16px;
+}
+.chart-section-header {
   display: flex;
-  gap: 8px;
-  padding: 0 16px 8px;
-}
-.ctype-tab {
-  flex: 1;
-  background: var(--bg-card);
-  border: 1.5px solid var(--border);
-  color: var(--text-2);
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 12px;
+  padding: 10px 14px;
   border-radius: var(--radius);
-  padding: 10px 6px;
-  font-size: .82rem;
-  font-weight: 600;
-  transition: all .2s;
+  background: var(--bg-card);
+  border-left: 4px solid var(--sleep);
 }
-.ctype-tab.active {
-  color: var(--text);
-  border-color: var(--sleep);
-  background: linear-gradient(135deg, #1a0e35, #200e50);
+.chart-section-header h2 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0;
 }
-.ctype-tab[data-type="study"].active { border-color: var(--study); background: linear-gradient(135deg, #08202e, #0c2d44); }
-.ctype-tab[data-type="exercise"].active { border-color: var(--exer); background: linear-gradient(135deg, #081e16, #0c2d22); }
+.chart-section-header .csh-icon { font-size: 1.2rem; }
+.chart-section-header.study-section { border-left-color: var(--study); }
+.chart-section-header.exer-section { border-left-color: var(--exer); }
+
 .chart-period-tabs {
   display: flex;
   gap: 6px;

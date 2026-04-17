@@ -325,6 +325,9 @@ async function loadProfile() {
   ].join('');
 }
 
+// Compatibility shim for old cached HTML referencing switchLog()
+function switchLog() { loadUnifiedLog(); }
+
 // ── View Switching ──
 function switchView(name) {
   document.querySelectorAll('#app-container .view').forEach(v => v.classList.remove('active'));

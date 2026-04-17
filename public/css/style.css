@@ -601,9 +601,32 @@ input, select { font-family: inherit; }
   user-select: none;
   -webkit-user-select: none;
 }
+.task-btn.active {
+  background: var(--task-color);
+  background: linear-gradient(135deg, var(--task-color), rgba(0,0,0,0.25));
+  color: #fff;
+  border-color: var(--task-color);
+  animation: taskRunning 2.5s infinite alternate var(--ease);
+  box-shadow: 0 0 20px var(--task-color-alpha);
+}
+@keyframes taskRunning {
+  0% { transform: scale(1); filter: brightness(1); }
+  100% { transform: scale(1.02); filter: brightness(1.2); }
+}
 .task-btn:active { transform: scale(.98); }
 .task-icon { font-size: 1.3rem; }
 .task-name { flex: 1; text-align: left; }
+.inline-task-timer {
+  margin-left: auto;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: .95rem;
+  background: rgba(0,0,0,0.2);
+  padding: 4px 8px;
+  border-radius: 6px;
+  backdrop-filter: blur(4px);
+}
 .task-delete-btn {
   display: none;
   background: var(--poor);

@@ -29,9 +29,9 @@ async function init() {
       opt.classList.add('active');
     });
   });
-  document.querySelectorAll('#task-icon-grid .icon-opt').forEach(opt => {
+  document.querySelectorAll('#task-icon-grid .icon-opt[data-icon]').forEach(opt => {
     opt.addEventListener('click', () => {
-      document.querySelectorAll('#task-icon-grid .icon-opt').forEach(o => o.classList.remove('active'));
+      document.querySelectorAll('#task-icon-grid .active').forEach(o => o.classList.remove('active'));
       opt.classList.add('active');
     });
   });
@@ -65,20 +65,24 @@ function renderTasks() {
     return;
   }
 
-  container.innerHTML = state.tasks.map(t => `
-    <div class="task-btn-container" style="position: relative; display: flex; align-items: center;">
-      <button class="task-btn ${state.activeSession?.task_id === t.id ? 'active' : ''}" 
-              style="${state.activeSession?.task_id === t.id ? 'background:'+t.color+'; color:#fff' : 'border-left: 4px solid '+t.color}" 
-              onclick="handleTaskClick(${t.id})"
-              oncontextmenu="handleTaskLongPress(event, ${t.id})"
-              ontouchstart="taskTouchStart(event, ${t.id})"
-              ontouchend="taskTouchEnd(event)">
-        <span class="task-icon">${t.icon}</span>
-        <span class="task-name">${t.name}</span>
-      </button>
-      <button id="delete-task-${t.id}" class="task-delete-btn" onclick="deleteTask(${t.id})">Delete</button>
-    </div>
-  `).join('');
+  container.innerHTML = state.tasks.map(t => {
+    const isActive = state.activeSession?.task_id === t.id;
+    return `
+      <div class="task-btn-container" style="position: relative; display: flex; align-items: center;">
+        <button class="task-btn ${isActive ? 'active' : ''}" 
+                style="${isActive ? '' : 'border-left-color: ' + t.color}; --task-color: ${t.color}; --task-color-alpha: ${t.color}80;" 
+                onclick="handleTaskClick(${t.id})"
+                oncontextmenu="handleTaskLongPress(event, ${t.id})"
+                ontouchstart="taskTouchStart(event, ${t.id})"
+                ontouchend="taskTouchEnd(event)">
+          <span class="task-icon">${t.icon}</span>
+          <span class="task-name">${t.name}</span>
+          <span class="inline-task-timer" id="inline-timer-${t.id}" style="${isActive ? '' : 'display:none;'}"></span>
+        </button>
+        <button id="delete-task-${t.id}" class="task-delete-btn" onclick="deleteTask(${t.id})">Delete</button>
+      </div>
+    `;
+  }).join('');
 }
 
 let touchTimer;
@@ -140,8 +144,8 @@ async function saveTask() {
   const name = document.getElementById('task-name').value.trim();
   if (!name) { shakeInput('task-name'); return; }
   
-  const color = document.querySelector('#task-color-grid .color-opt.active')?.dataset.color;
-  const icon = document.querySelector('#task-icon-grid .icon-opt.active')?.dataset.icon;
+  const color = document.querySelector('#task-color-grid .active')?.dataset.color;
+  const icon = document.querySelector('#task-icon-grid .active')?.dataset.icon || document.getElementById('custom-icon-input')?.value;
 
   const data = await api('/tasks', { method: 'POST', body: { name, color, icon } });
   if (data && !data.error) {
@@ -183,8 +187,14 @@ function updateTimerDisplay() {
   const h = Math.floor(elapsed / 3600000);
   const m = Math.floor((elapsed % 3600000) / 60000);
   const s = Math.floor((elapsed % 60000) / 1000);
+  const formatted = `${h > 0 ? h+'h ' : ''}${pad(m)}m ${pad(s)}s`;
   const el = document.getElementById('active-task-timer');
-  if (el) el.textContent = `${h > 0 ? h+'h ' : ''}${pad(m)}m ${pad(s)}s`;
+  if (el) el.textContent = formatted;
+  const inline = document.getElementById('inline-timer-' + state.activeSession.task_id);
+  if (inline) {
+    inline.textContent = formatted;
+    inline.style.display = 'block';
+  }
 }
 
 async function stopActiveTask() {
@@ -342,4 +352,36 @@ function shakeInput(id) {
   if (!el) return;
   el.classList.add('shake');
   setTimeout(() => el.classList.remove('shake'), 500);
+}
+
+function setCustomColor(val) {
+  document.querySelectorAll('#task-color-grid .color-opt').forEach(o => o.classList.remove('active'));
+  const btn = document.querySelector('.custom-color-label');
+  btn.classList.add('active');
+  btn.dataset.color = val;
+}
+
+function triggerCustomIcon() {
+  document.getElementById('custom-icon-btn').style.display = 'none';
+  const inp = document.getElementById('custom-icon-input');
+  inp.style.display = 'block';
+  inp.focus();
+}
+
+function setCustomIcon(val) {
+  if (val.length > 0) {
+    document.querySelectorAll('#task-icon-grid .active').forEach(o => o.classList.remove('active'));
+    const inp = document.getElementById('custom-icon-input');
+    inp.classList.add('active');
+    inp.dataset.icon = val;
+  }
+}
+
+function hideCustomIconBlur() {
+  const inp = document.getElementById('custom-icon-input');
+  if (!inp.value) {
+    inp.style.display = 'none';
+    inp.classList.remove('active');
+    document.getElementById('custom-icon-btn').style.display = 'block';
+  }
 }

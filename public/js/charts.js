@@ -2,7 +2,7 @@ let charts = {};
 
 async function loadCharts(days = 7) {
   document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
-  document.querySelector(\`.period-tab[onclick="setChartPeriod(\${days})"]\`)?.classList.add('active');
+  document.querySelector(`.period-tab[onclick="setChartPeriod(${days})"]`)?.classList.add('active');
 
   const res = await fetch('/api/stats?days=' + days, { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('sleeplogs_token') } });
   if (!res.ok) return;
@@ -10,10 +10,10 @@ async function loadCharts(days = 7) {
 
   const grid = document.getElementById('unified-stats-grid');
   if (grid) {
-    grid.innerHTML = \`
-      <div class="stat-tile"><div class="stat-tile-val" style="color:var(--study-hi)">\${data.total_records || 0}</div><div class="stat-tile-label">Sessions</div></div>
-      <div class="stat-tile"><div class="stat-tile-val" style="color:var(--exer-hi)">\${formatDuration(data.total_minutes)}</div><div class="stat-tile-label">Logged time</div></div>
-    \`;
+    grid.innerHTML = `
+      <div class="stat-tile"><div class="stat-tile-val" style="color:var(--study-hi)">${data.total_records || 0}</div><div class="stat-tile-label">Sessions</div></div>
+      <div class="stat-tile"><div class="stat-tile-val" style="color:var(--exer-hi)">${formatDuration(data.total_minutes)}</div><div class="stat-tile-label">Logged time</div></div>
+    `;
   }
 
   const ctxMain = document.getElementById('unified-main-chart');

@@ -67,16 +67,16 @@ function renderTasks() {
 
   container.innerHTML = state.tasks.map(t => `
     <div class="task-btn-container" style="position: relative; display: flex; align-items: center;">
-      <button class="task-btn \${state.activeSession?.task_id === t.id ? 'active' : ''}" 
-              style="\${state.activeSession?.task_id === t.id ? 'background:'+t.color+'; color:#fff' : 'border-left: 4px solid '+t.color}" 
-              onclick="handleTaskClick(\${t.id})"
-              oncontextmenu="handleTaskLongPress(event, \${t.id})"
-              ontouchstart="taskTouchStart(event, \${t.id})"
+      <button class="task-btn ${state.activeSession?.task_id === t.id ? 'active' : ''}" 
+              style="${state.activeSession?.task_id === t.id ? 'background:'+t.color+'; color:#fff' : 'border-left: 4px solid '+t.color}" 
+              onclick="handleTaskClick(${t.id})"
+              oncontextmenu="handleTaskLongPress(event, ${t.id})"
+              ontouchstart="taskTouchStart(event, ${t.id})"
               ontouchend="taskTouchEnd(event)">
-        <span class="task-icon">\${t.icon}</span>
-        <span class="task-name">\${t.name}</span>
+        <span class="task-icon">${t.icon}</span>
+        <span class="task-name">${t.name}</span>
       </button>
-      <button id="delete-task-\${t.id}" class="task-delete-btn" onclick="deleteTask(\${t.id})">Delete</button>
+      <button id="delete-task-${t.id}" class="task-delete-btn" onclick="deleteTask(${t.id})">Delete</button>
     </div>
   `).join('');
 }
@@ -184,7 +184,7 @@ function updateTimerDisplay() {
   const m = Math.floor((elapsed % 3600000) / 60000);
   const s = Math.floor((elapsed % 60000) / 1000);
   const el = document.getElementById('active-task-timer');
-  if (el) el.textContent = \`\${h > 0 ? h+'h ' : ''}\${pad(m)}m \${pad(s)}s\`;
+  if (el) el.textContent = `${h > 0 ? h+'h ' : ''}${pad(m)}m ${pad(s)}s`;
 }
 
 async function stopActiveTask() {
@@ -217,21 +217,21 @@ async function loadUnifiedLog() {
 
   let html = '';
   for (const [date, dayItems] of Object.entries(groups)) {
-    html += \`<div class="history-date-group">
-      <div class="history-date">\${formatDate(date)}</div>
-      \${dayItems.map(r => \`
-        <div class="activity-item kind-study" style="border-left-color: \${r.color}">
-          <span class="ai-icon">\${r.icon}</span>
+    html += `<div class="history-date-group">
+      <div class="history-date">${formatDate(date)}</div>
+      ${dayItems.map(r => `
+        <div class="activity-item kind-study" style="border-left-color: ${r.color}">
+          <span class="ai-icon">${r.icon}</span>
           <div class="ai-info">
-            <div class="ai-title">\${r.task_name}</div>
-            <div class="ai-sub">\${formatTime(r.start_time)}</div>
+            <div class="ai-title">${r.task_name}</div>
+            <div class="ai-sub">${formatTime(r.start_time)}</div>
           </div>
           <div>
-            <div class="ai-dur study-color" style="color:\${r.color}">\${formatDuration(r.duration_minutes)}</div>
-            <button class="history-delete" onclick="deleteRecord(\${r.id})" style="display:block;margin-top:4px">&times;</button>
+            <div class="ai-dur study-color" style="color:${r.color}">${formatDuration(r.duration_minutes)}</div>
+            <button class="history-delete" onclick="deleteRecord(${r.id})" style="display:block;margin-top:4px">&times;</button>
           </div>
-        </div>\`).join('')}
-    </div>\`;
+        </div>`).join('')}
+    </div>`;
   }
   list.innerHTML = html;
 }
@@ -253,10 +253,10 @@ async function loadProfile() {
   const stat = await api('/stats');
   
   const grid = document.getElementById('profile-stats');
-  if (grid) grid.innerHTML = \`
-    <div class="stat-tile"><div class="stat-tile-val" style="color:var(--study-hi)">\${stat?.total_records || 0}</div><div class="stat-tile-label">Total Logs</div></div>
-    <div class="stat-tile"><div class="stat-tile-val" style="color:var(--exer-hi)">\${stat?.total_minutes ? formatDuration(stat.total_minutes) : '0m'}</div><div class="stat-tile-label">Total Time</div></div>
-  \`;
+  if (grid) grid.innerHTML = `
+    <div class="stat-tile"><div class="stat-tile-val" style="color:var(--study-hi)">${stat?.total_records || 0}</div><div class="stat-tile-label">Total Logs</div></div>
+    <div class="stat-tile"><div class="stat-tile-val" style="color:var(--exer-hi)">${stat?.total_minutes ? formatDuration(stat.total_minutes) : '0m'}</div><div class="stat-tile-label">Total Time</div></div>
+  `;
 
   let userAge = '';
   if (data.dob) {
@@ -271,12 +271,12 @@ async function loadProfile() {
 
   const info = document.getElementById('profile-info');
   if (info) info.innerHTML = [
-    data.dob ? \`<div class="profile-row"><span class="profile-row-label">Age</span><span class="profile-row-val">\${userAge}</span></div>\` : '',
-    data.gender ? \`<div class="profile-row"><span class="profile-row-label">Gender</span><span class="profile-row-val">\${capitalize(data.gender)}</span></div>\` : '',
-    \`<div class="profile-row"><span class="profile-row-label">Sleep goal</span><span class="profile-row-val">\${data.sleep_goal_hours || 8}h / night</span></div>\`,
-    data.occupation ? \`<div class="profile-row"><span class="profile-row-label">Occupation</span><span class="profile-row-val">\${data.occupation}</span></div>\` : '',
-    data.work_schedule ? \`<div class="profile-row"><span class="profile-row-label">Schedule</span><span class="profile-row-val">\${scheduleMap[data.work_schedule] || data.work_schedule}</span></div>\` : '',
-    data.exercise_frequency ? \`<div class="profile-row"><span class="profile-row-label">Exercise</span><span class="profile-row-val">\${exerMap[data.exercise_frequency] || data.exercise_frequency}</span></div>\` : ''
+    data.dob ? `<div class="profile-row"><span class="profile-row-label">Age</span><span class="profile-row-val">${userAge}</span></div>` : '',
+    data.gender ? `<div class="profile-row"><span class="profile-row-label">Gender</span><span class="profile-row-val">${capitalize(data.gender)}</span></div>` : '',
+    `<div class="profile-row"><span class="profile-row-label">Sleep goal</span><span class="profile-row-val">${data.sleep_goal_hours || 8}h / night</span></div>`,
+    data.occupation ? `<div class="profile-row"><span class="profile-row-label">Occupation</span><span class="profile-row-val">${data.occupation}</span></div>` : '',
+    data.work_schedule ? `<div class="profile-row"><span class="profile-row-label">Schedule</span><span class="profile-row-val">${scheduleMap[data.work_schedule] || data.work_schedule}</span></div>` : '',
+    data.exercise_frequency ? `<div class="profile-row"><span class="profile-row-label">Exercise</span><span class="profile-row-val">${exerMap[data.exercise_frequency] || data.exercise_frequency}</span></div>` : ''
   ].join('');
 }
 
@@ -317,7 +317,7 @@ function formatDuration(min) {
   if (min < 1) return '< 1m';
   const h = Math.floor(min / 60);
   const m = Math.round(min % 60);
-  return h > 0 ? \`\${h}h \${m}m\` : \`\${m}m\`;
+  return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
 function pad(n) { return String(n).padStart(2, '0'); }

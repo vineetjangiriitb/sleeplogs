@@ -1,7 +1,7 @@
 {
-  "name": "SleepLogs",
-  "short_name": "SleepLogs",
-  "description": "Track your sleep patterns",
+  "name": "TimeLog",
+  "short_name": "TimeLog",
+  "description": "Custom Activity & Habit Tracker",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f0f1a",

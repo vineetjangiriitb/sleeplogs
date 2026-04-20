@@ -1,11 +1,11 @@
 {
-  "name": "TimeLog",
-  "short_name": "TimeLog",
+  "name": "Timelogs",
+  "short_name": "Timelogs",
   "description": "Custom Activity & Habit Tracker",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f0f1a",
-  "theme_color": "#0f0f1a",
+  "background_color": "#080c14",
+  "theme_color": "#080c14",
   "orientation": "portrait",
   "icons": [
     {
